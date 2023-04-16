@@ -1,34 +1,33 @@
-// Add these two new route handlers to the existing if-else block in handleRequest()
-if (path === "/get-submitted-articles" && request.method === "GET") {
-    return getSubmittedArticles();
-  } else if (path === "/approve-article" && request.method === "PUT") {
-    return approveArticle(request);
+async function fetchSubmittedArticles() {
+    const response = await fetch("/get-submitted-articles");
+    const articles = await response.json();
+    displayArticles(articles);
   }
   
-  // New functions to handle the admin requests
-  const getSubmittedArticles = async () => {
-    const submittedArticles = [];
-    for await (const key of ARTICLE_DATA.list()) {
-      const articleId = key.name;
-      const articleData = await ARTICLE_DATA.get(articleId);
-      const articleObj = JSON.parse(articleData);
-      if (!articleObj.approved) {
-        submittedArticles.push({ ...articleObj, articleId });
-      }
-    }
-    return new Response(JSON.stringify(submittedArticles), { status: 200 });
-  };
+  function displayArticles(articles) {
+    const container = document.getElementById("articles-container");
+    articles.forEach(article => {
+      const articleElem = document.createElement("div");
+      articleElem.innerHTML = `
+        <h3>${article.companyName}</h3>
+        <p><a href="${article.companyWebsite}" target="_blank">${article.companyWebsite}</a></p>
+        <p>Topic: ${article.topic}</p>
+        <p>${article.article}</p>
+        <button onclick="approveArticle(${article.articleId})">Approve</button>
+      `;
+      container.appendChild(articleElem);
+    });
+  }
   
-  const approveArticle = async (request) => {
-    const url = new URL(request.url);
-    const articleId = url.searchParams.get("id");
-    const articleData = await ARTICLE_DATA.get(articleId);
-    if (articleData) {
-      const articleObj = JSON.parse(articleData);
-      articleObj.approved = true;
-      await ARTICLE_DATA.put(articleId, JSON.stringify(articleObj));
-      return new Response("Article approved successfully!", { status: 200 });
+  fetchSubmittedArticles();
+  
+  async function approveArticle(articleId) {
+    const response = await fetch(`/approve-article?id=${articleId}`, { method: "PUT" });
+    if (response.ok) {
+      alert("Article approved successfully!");
+      location.reload();
     } else {
-    return new Response("Article not found.", { status: 404 });
+      alert("An error occurred. Please try again.");
     }
-    };
+  }
+  
