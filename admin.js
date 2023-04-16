@@ -1,5 +1,5 @@
 async function fetchSubmittedArticles() {
-    const response = await fetch("/get-submitted-articles");
+    const response = await fetch("/my-worker/get-submitted-articles");
     const articles = await response.json();
     displayArticles(articles);
   }
@@ -22,7 +22,7 @@ async function fetchSubmittedArticles() {
   fetchSubmittedArticles();
   
   async function approveArticle(articleId) {
-    const response = await fetch(`/approve-article?id=${articleId}`, { method: "PUT" });
+    const response = await fetch(`/my-worker/approve-article?id=${articleId}`, { method: "PUT" });
     if (response.ok) {
       alert("Article approved successfully!");
       location.reload();

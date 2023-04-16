@@ -1,11 +1,16 @@
+// Add an event listener to listen for incoming requests
 addEventListener("fetch", (event) => {
+  // Respond to the event with the result of the handleRequest() function
   event.respondWith(handleRequest(event.request));
 });
 
+// This function handles the incoming requests and decides which function to call based on the request's method and path
 const handleRequest = async (request) => {
+  // Get the request's URL and path
   const url = new URL(request.url);
   const path = url.pathname;
 
+  // Check if the request is a POST to /submit-article
   if (path === "/submit-article" && request.method === "POST") {
     return handleArticleSubmission(request);
   } else if (path === "/get-submitted-articles" && request.method === "GET") {
@@ -13,47 +18,63 @@ const handleRequest = async (request) => {
   } else if (path === "/approve-article" && request.method === "PUT") {
     return approveArticle(request);
   } else {
-    // Serve the appropriate HTML, CSS, and JS files for your application
+    // If none of the above conditions are met, serve static assets
     return serveStaticAsset(request);
   }
 };
 
-const handleArticleSubmission = async (request) => {
-  // ...
-};
-
+// This function returns a list of submitted articles that are not yet approved
 const getSubmittedArticles = async () => {
-  // ...
+  const submittedArticles = [];
+  // Loop through all the articles in ARTICLE_DATA
+  for await (const key of ARTICLE_DATA.list()) {
+    const articleId = key.name;
+    const articleData = await ARTICLE_DATA.get(articleId);
+    const articleObj = JSON.parse(articleData);
+    // If the article is not approved, add it to the submittedArticles array
+    if (!articleObj.approved) {
+      submittedArticles.push({ ...articleObj, articleId });
+    }
+  }
+  // Return the submittedArticles array as a JSON response
+  return new Response(JSON.stringify(submittedArticles), { status: 200 });
 };
 
+// This function approves an article by updating its "approved" property to true
 const approveArticle = async (request) => {
-  // ...
+  const url = new URL(request.url);
+  const articleId = url.searchParams.get("id");
+  const articleData = await ARTICLE_DATA.get(articleId);
+  if (articleData) {
+    const articleObj = JSON.parse(articleData);
+    articleObj.approved = true;
+    await ARTICLE_DATA.put(articleId, JSON.stringify(articleObj));
+    return new Response("Article approved successfully!", { status: 200 });
+  } else {
+    return new Response("Article not found.", { status: 404 });
+  }
 };
 
-// This function serves the static assets (HTML, CSS, JS, etc.) based on the incoming request
+// This function serves static assets (HTML, CSS, JS) for the application
 async function serveStaticAsset(request) {
-  // Define a mapping between paths and files
-  const staticAssetMap = {
-    "/": "index.html",
-    "/admin": "admin.html",
-    "/script.js": "script.js",
-    "/admin.js": "admin.js",
-    // Add other static assets like CSS, images, etc., if needed
-  };
-
+  // Determine the file to serve based on the request URL
+  let file;
   const url = new URL(request.url);
-  const path = url.pathname;
-  const filename = staticAssetMap[path] || "404.html";
 
-  // Fetch the asset from the static hosting
-  const assetUrl = new URL(`https://your-static-assets-hosting.example.com/${filename}`);
-  const assetResponse = await fetch(assetUrl);
-
-  // If the asset is not found, respond with a 404 status
-  if (!assetResponse.ok) {
-    return new Response("Not found", { status: 404 });
+  if (url.pathname === "/") {
+    file = "index.html";
+  } else {
+    file = url.pathname.substring(1); // Remove the leading "/"
   }
 
-  // Respond with the fetched asset
-  return assetResponse;
+  // Fetch the file from the static assets
+  const fileResponse = await fetch(`https://your-static-assets-url.com/${file}`);
+
+  // If the file is not found, serve a fallback response
+  if (!fileResponse.ok) {
+    return new Response("File not found", { status: 404 });
+  }
+
+  // Return the fetched file as the response
+  return fileResponse;
 }
