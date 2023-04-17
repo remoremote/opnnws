@@ -4,6 +4,13 @@ addEventListener("fetch", (event) => {
   event.respondWith(handleRequest(event.request));
 });
 
+const handleArticleSubmission = async (request) => {
+  const data = await request.json();
+  const articleId = new Date().getTime().toString();
+  await ARTICLE_DATA.put(articleId, JSON.stringify({ ...data, approved: false }));
+  return new Response("Article submitted successfully!", { status: 201 });
+};
+
 // This function handles the incoming requests and decides which function to call based on the request's method and path
 const handleRequest = async (request) => {
   // Get the request's URL and path
@@ -68,7 +75,7 @@ async function serveStaticAsset(request) {
   }
 
   // Fetch the file from the static assets
-  const fileResponse = await fetch(`https://your-static-assets-url.com/${file}`);
+  const fileResponse = await fetch(`https://0cd44760.opnnws.pages.dev/${file}`);
 
   // If the file is not found, serve a fallback response
   if (!fileResponse.ok) {
@@ -78,3 +85,34 @@ async function serveStaticAsset(request) {
   // Return the fetched file as the response
   return fileResponse;
 }
+
+const getApprovedArticles = async () => {
+  const approvedArticles = [];
+  for await (const key of ARTICLE_DATA.list()) {
+    const articleId = key.name;
+    const articleData = await ARTICLE_DATA.get(articleId);
+    const articleObj = JSON.parse(articleData);
+    if (articleObj.approved) {
+      approvedArticles.push({ ...articleObj, articleId });
+    }
+  }
+  return new Response(JSON.stringify(approvedArticles), { status: 200 });
+};
+
+const handleRequest = async (request) => {
+  const url = new URL(request.url);
+  const path = url.pathname;
+
+  if (path === "/submit-article" && request.method === "POST") {
+    return handleArticleSubmission(request);
+  } else if (path === "/get-submitted-articles" && request.method === "GET") {
+    return getSubmittedArticles();
+  } else if (path === "/get-approved-articles" && request.method === "GET") {
+    return getApprovedArticles();
+  } else if (path === "/approve-article" && request.method === "PUT") {
+    return approveArticle(request);
+  } else {
+    return serveStaticAsset(request);
+  }
+};
+

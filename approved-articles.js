@@ -1,5 +1,5 @@
-async function fetchSubmittedArticles() {
-    const response = await fetch("/get-submitted-articles");
+async function fetchApprovedArticles() {
+    const response = await fetch("/get-approved-articles");
     const articles = await response.json();
     displayArticles(articles);
   }
@@ -13,21 +13,10 @@ async function fetchSubmittedArticles() {
         <p><a href="${article.companyWebsite}" target="_blank">${article.companyWebsite}</a></p>
         <p>Topic: ${article.topic}</p>
         <p>${article.article}</p>
-        <button onclick="approveArticle('${article.articleId}')">Approve</button>
       `;
       container.appendChild(articleElem);
     });
   }
   
-  fetchSubmittedArticles();
-  
-  async function approveArticle(articleId) {
-    const response = await fetch(`/approve-article?id=${articleId}`, { method: "PUT" });
-    if (response.ok) {
-      alert("Article approved successfully!");
-      location.reload();
-    } else {
-      alert("An error occurred. Please try again.");
-    }
-  }
+  fetchApprovedArticles();
   
