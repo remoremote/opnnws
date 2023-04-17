@@ -91,7 +91,7 @@ async function serveStaticAsset(request) {
   return fileResponse;
 }
 
-const getApprovedArticles = async (ARTICLE_DATA) => { // Pass ARTICLE_DATA as a parameter
+const getApprovedArticles = async (ARTICLE_DATA) => {
   const approvedArticles = [];
   for await (const key of ARTICLE_DATA.list()) {
     const articleId = key.name;
@@ -101,7 +101,7 @@ const getApprovedArticles = async (ARTICLE_DATA) => { // Pass ARTICLE_DATA as a 
       approvedArticles.push({ ...articleObj, articleId });
     }
   }
-  return new Response(JSON.stringify(approvedArticles), { status: 200 });
+  return new Response(JSON.stringify(approvedArticles), { status: 200, headers: { 'Content-Type': 'application/json' } });
 };
 
 
