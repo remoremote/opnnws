@@ -1,3 +1,5 @@
+const ARTICLE_DATA_NAMESPACE_ID = 'd4ec98da9c4a4793bdac872e4c7ff5a4';
+
 // Add an event listener to listen for incoming requests
 addEventListener("fetch", (event) => {
   // Respond to the event with the result of the handleRequest() function
@@ -36,20 +38,17 @@ const handleRequest = async (request) => {
 };
 
 // This function returns a list of submitted articles that are not yet approved
-const getSubmittedArticles = async (ARTICLE_DATA) => {
+const getSubmittedArticles = async () => {
   const submittedArticles = [];
-  // Loop through all the articles in ARTICLE_DATA
-  for await (const key of ARTICLE_DATA.list()) {
+  for await (const key of ARTICLE_DATA.list({ namespace: ARTICLE_DATA_NAMESPACE_ID })) {
     const articleId = key.name;
-    const articleData = await ARTICLE_DATA.get(articleId);
+    const articleData = await ARTICLE_DATA.get(articleId, { namespace: ARTICLE_DATA_NAMESPACE_ID });
     const articleObj = JSON.parse(articleData);
-    // If the article is not approved, add it to the submittedArticles array
     if (!articleObj.approved) {
       submittedArticles.push({ ...articleObj, articleId });
     }
   }
-  // Return the submittedArticles array as a JSON response
-  return new Response(JSON.stringify(submittedArticles), { status: 200 });
+  return new Response(JSON.stringify(submittedArticles), { status: 200, headers: { 'Content-Type': 'application/json' } });
 };
 
 // This function approves an article by updating its "approved" property to true
