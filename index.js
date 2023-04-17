@@ -1,12 +1,10 @@
-const ARTICLE_DATA = new NAMESPACE_NAME();
-
 // Add an event listener to listen for incoming requests
 addEventListener("fetch", (event) => {
   // Respond to the event with the result of the handleRequest() function
   event.respondWith(handleRequest(event.request));
 });
 
-const handleArticleSubmission = async (request) => {
+const handleArticleSubmission = async (request, ARTICLE_DATA) => {
   const data = await request.json();
   const articleId = new Date().getTime().toString();
   await ARTICLE_DATA.put(articleId, JSON.stringify({ ...data, approved: false }));
@@ -15,28 +13,30 @@ const handleArticleSubmission = async (request) => {
 
 // This function handles the incoming requests and decides which function to call based on the request's method and path
 const handleRequest = async (request) => {
+  // Initialize ARTICLE_DATA here
+  const ARTICLE_DATA = new NAMESPACE_NAME();
+  
   // Get the request's URL and path
   const url = new URL(request.url);
   const path = url.pathname;
 
   // Check if the request is a POST to /submit-article
   if (path === "/submit-article" && request.method === "POST") {
-    return handleArticleSubmission(request);
+    return handleArticleSubmission(request, ARTICLE_DATA);
   } else if (path === "/get-submitted-articles" && request.method === "GET") {
-    return getSubmittedArticles();
+    return getSubmittedArticles(ARTICLE_DATA);
   } else if (path === "/get-approved-articles" && request.method === "GET") {
-    return getApprovedArticles();
+    return getApprovedArticles(ARTICLE_DATA);
   } else if (path === "/approve-article" && request.method === "PUT") {
-    return approveArticle(request);
+    return approveArticle(request, ARTICLE_DATA);
   } else {
     // If none of the above conditions are met, serve static assets
     return serveStaticAsset(request);
   }
 };
 
-
 // This function returns a list of submitted articles that are not yet approved
-const getSubmittedArticles = async () => {
+const getSubmittedArticles = async (ARTICLE_DATA) => {
   const submittedArticles = [];
   // Loop through all the articles in ARTICLE_DATA
   for await (const key of ARTICLE_DATA.list()) {
@@ -53,7 +53,7 @@ const getSubmittedArticles = async () => {
 };
 
 // This function approves an article by updating its "approved" property to true
-const approveArticle = async (request) => {
+const approveArticle = async (request, ARTICLE_DATA) => {
   const url = new URL(request.url);
   const articleId = url.searchParams.get("id");
   const articleData = await ARTICLE_DATA.get(articleId);
@@ -91,7 +91,7 @@ async function serveStaticAsset(request) {
   return fileResponse;
 }
 
-const getApprovedArticles = async () => {
+const getApprovedArticles = async (ARTICLE_DATA) => { // Pass ARTICLE_DATA as a parameter
   const approvedArticles = [];
   for await (const key of ARTICLE_DATA.list()) {
     const articleId = key.name;
