@@ -1,4 +1,6 @@
-document.getElementById("article-form").addEventListener("submit", async (event) => {
+const form = document.getElementById("article-form");
+
+form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const companyName = document.getElementById("company-name").value;
@@ -6,15 +8,20 @@ document.getElementById("article-form").addEventListener("submit", async (event)
   const topic = document.getElementById("topic").value;
   const article = document.getElementById("article").value;
 
-  const response = await fetch("https://opnnws.org/my-worker/submit-article", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ companyName, companyWebsite, topic, article }),
-});
+  const submission = { companyName, companyWebsite, topic, article };
+
+  const response = await fetch("/submit-article", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(submission),
+  });
 
   if (response.ok) {
     alert("Article submitted successfully!");
+    form.reset();
   } else {
-    alert("An error occurred. Please try again.");
+    alert("Failed to submit article. Please try again.");
   }
 });
