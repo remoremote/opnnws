@@ -14,7 +14,7 @@ const handleArticleSubmission = async (request, ARTICLE_DATA) => {
 // This function handles the incoming requests and decides which function to call based on the request's method and path
 const handleRequest = async (request) => {
   // Initialize ARTICLE_DATA here
-  const ARTICLE_DATA = new NAMESPACE_NAME();
+  const ARTICLE_DATA = new ARTICLE_DATA();
   
   // Get the request's URL and path
   const url = new URL(request.url);
