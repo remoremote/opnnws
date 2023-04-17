@@ -7,10 +7,10 @@ document.getElementById("article-form").addEventListener("submit", async (event)
   const article = document.getElementById("article").value;
 
   const response = await fetch("https://opnnws.org/my-worker/submit-article", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ companyName, companyWebsite, topic, article }),
-  });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ companyName, companyWebsite, topic, article }),
+});
 
   if (response.ok) {
     alert("Article submitted successfully!");
