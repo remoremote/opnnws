@@ -6,7 +6,7 @@ document.getElementById("article-form").addEventListener("submit", async (event)
   const topic = document.getElementById("topic").value;
   const article = document.getElementById("article").value;
 
-  const response = await fetch("/submit-article", {
+  const response = await fetch("https://opnnws.org/my-worker/submit-article", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ companyName, companyWebsite, topic, article }),

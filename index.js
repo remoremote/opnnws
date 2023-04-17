@@ -6,31 +6,28 @@ addEventListener("fetch", (event) => {
   event.respondWith(handleRequest(event.request));
 });
 
-const handleArticleSubmission = async (request, ARTICLE_DATA) => {
+const handleArticleSubmission = async (request) => {
   const data = await request.json();
   const articleId = new Date().getTime().toString();
-  await ARTICLE_DATA.put(articleId, JSON.stringify({ ...data, approved: false }));
+  await ARTICLE_DATA_BINDING.put(articleId, JSON.stringify({ ...data, approved: false }));
   return new Response("Article submitted successfully!", { status: 201 });
 };
 
 // This function handles the incoming requests and decides which function to call based on the request's method and path
-const handleRequest = async (request) => {
-  // Initialize ARTICLE_DATA here
-  const ARTICLE_DATA = new ARTICLE_DATA();
-  
+const handleRequest = async (request) => {  
   // Get the request's URL and path
   const url = new URL(request.url);
   const path = url.pathname;
 
   // Check if the request is a POST to /submit-article
   if (path === "/submit-article" && request.method === "POST") {
-    return handleArticleSubmission(request, ARTICLE_DATA);
+    return handleArticleSubmission(request);
   } else if (path === "/get-submitted-articles" && request.method === "GET") {
-    return getSubmittedArticles(ARTICLE_DATA);
+    return getSubmittedArticles();
   } else if (path === "/get-approved-articles" && request.method === "GET") {
-    return getApprovedArticles(ARTICLE_DATA);
+    return getApprovedArticles();
   } else if (path === "/approve-article" && request.method === "PUT") {
-    return approveArticle(request, ARTICLE_DATA);
+    return approveArticle(request);
   } else {
     // If none of the above conditions are met, serve static assets
     return serveStaticAsset(request);
@@ -40,9 +37,9 @@ const handleRequest = async (request) => {
 // This function returns a list of submitted articles that are not yet approved
 const getSubmittedArticles = async () => {
   const submittedArticles = [];
-  for await (const key of ARTICLE_DATA.list({ namespace: ARTICLE_DATA_NAMESPACE_ID })) {
+  for await (const key of ARTICLE_DATA_BINDING.list({ namespace: ARTICLE_DATA_NAMESPACE_ID })) {
     const articleId = key.name;
-    const articleData = await ARTICLE_DATA.get(articleId, { namespace: ARTICLE_DATA_NAMESPACE_ID });
+    const articleData = await ARTICLE_DATA_BINDING.get(articleId, { namespace: ARTICLE_DATA_NAMESPACE_ID });
     const articleObj = JSON.parse(articleData);
     if (!articleObj.approved) {
       submittedArticles.push({ ...articleObj, articleId });
@@ -52,14 +49,14 @@ const getSubmittedArticles = async () => {
 };
 
 // This function approves an article by updating its "approved" property to true
-const approveArticle = async (request, ARTICLE_DATA) => {
+const approveArticle = async (request) => {
   const url = new URL(request.url);
   const articleId = url.searchParams.get("id");
-  const articleData = await ARTICLE_DATA.get(articleId);
+  const articleData = await ARTICLE_DATA_BINDING.get(articleId);
   if (articleData) {
     const articleObj = JSON.parse(articleData);
     articleObj.approved = true;
-    await ARTICLE_DATA.put(articleId, JSON.stringify(articleObj));
+    await ARTICLE_DATA_BINDING.put(articleId, JSON.stringify(articleObj));
     return new Response("Article approved successfully!", { status: 200 });
   } else {
     return new Response("Article not found.", { status: 404 });
@@ -79,28 +76,30 @@ async function serveStaticAsset(request) {
   }
 
   // Fetch the file from the static assets
-  const fileResponse = await fetch(`https://0cd44760.opnnws.pages.dev/${file}`);
-
-  // If the file is not found, serve a fallback response
-  if (!fileResponse.ok) {
+  const fileResponse = await fetch(`https://0cd44760.opnnws.pages.dev/${file}`, {
+    headers: {
+    "Content-Type": file.endsWith(".html") ? "text/html" : "application/json",
+    },
+    });
+    
+    // If the file is not found, serve a fallback response
+    if (!fileResponse.ok) {
     return new Response("File not found", { status: 404 });
-  }
-
-  // Return the fetched file as the response
-  return fileResponse;
-}
-
-const getApprovedArticles = async (ARTICLE_DATA) => {
-  const approvedArticles = [];
-  for await (const key of ARTICLE_DATA.list()) {
+    }
+    
+    // Return the fetched file as the response
+    return fileResponse;
+    }
+    
+    const getApprovedArticles = async () => {
+    const approvedArticles = [];
+    for await (const key of ARTICLE_DATA_BINDING.list()) {
     const articleId = key.name;
-    const articleData = await ARTICLE_DATA.get(articleId);
+    const articleData = await ARTICLE_DATA_BINDING.get(articleId);
     const articleObj = JSON.parse(articleData);
     if (articleObj.approved) {
-      approvedArticles.push({ ...articleObj, articleId });
+    approvedArticles.push({ ...articleObj, articleId });
     }
-  }
-  return new Response(JSON.stringify(approvedArticles), { status: 200, headers: { 'Content-Type': 'application/json' } });
-};
-
-
+    }
+    return new Response(JSON.stringify(approvedArticles), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    };
