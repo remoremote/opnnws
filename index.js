@@ -1,3 +1,5 @@
+const ARTICLE_DATA = new NAMESPACE_NAME();
+
 // Add an event listener to listen for incoming requests
 addEventListener("fetch", (event) => {
   // Respond to the event with the result of the handleRequest() function
@@ -22,6 +24,8 @@ const handleRequest = async (request) => {
     return handleArticleSubmission(request);
   } else if (path === "/get-submitted-articles" && request.method === "GET") {
     return getSubmittedArticles();
+  } else if (path === "/get-approved-articles" && request.method === "GET") {
+    return getApprovedArticles();
   } else if (path === "/approve-article" && request.method === "PUT") {
     return approveArticle(request);
   } else {
@@ -29,6 +33,7 @@ const handleRequest = async (request) => {
     return serveStaticAsset(request);
   }
 };
+
 
 // This function returns a list of submitted articles that are not yet approved
 const getSubmittedArticles = async () => {
@@ -97,22 +102,5 @@ const getApprovedArticles = async () => {
     }
   }
   return new Response(JSON.stringify(approvedArticles), { status: 200 });
-};
-
-const handleRequest = async (request) => {
-  const url = new URL(request.url);
-  const path = url.pathname;
-
-  if (path === "/submit-article" && request.method === "POST") {
-    return handleArticleSubmission(request);
-  } else if (path === "/get-submitted-articles" && request.method === "GET") {
-    return getSubmittedArticles();
-  } else if (path === "/get-approved-articles" && request.method === "GET") {
-    return getApprovedArticles();
-  } else if (path === "/approve-article" && request.method === "PUT") {
-    return approveArticle(request);
-  } else {
-    return serveStaticAsset(request);
-  }
 };
 
