@@ -104,3 +104,4 @@ const getApprovedArticles = async (ARTICLE_DATA) => { // Pass ARTICLE_DATA as a 
   return new Response(JSON.stringify(approvedArticles), { status: 200 });
 };
 
+
